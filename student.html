@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Readiness Check &middot; BIO 004</title>
+<style>
+:root{--navy:#0B1530;--navy2:#142a36;--terra:#8B3A2E;--terra2:#A0522D;--gold:#B8924A;--off:#FAFAF9;--line:rgba(11,21,48,.14);--ok:#1E7A46;--bad:#A0522D}
+*{box-sizing:border-box}
+body{margin:0;background:var(--off);color:var(--navy);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding:18px max(16px,4vw) 40px;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--terra2);margin:0 0 6px}
+h1{font-size:22px;font-weight:800;margin:0 0 14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 20px 22px;box-shadow:0 2px 10px rgba(11,21,48,.07)}
+label{display:block;font-weight:700;font-size:14px;margin:0 0 6px}
+input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border:1px solid var(--line);border-radius:10px}
+.btn{font:inherit;font-weight:800;font-size:17px;border:0;border-radius:12px;background:var(--navy);color:#fff;padding:14px 20px;cursor:pointer;width:100%;margin-top:14px}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.terra{background:var(--terra)}
+.muted{color:var(--navy);opacity:.7;font-size:14px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px;font-size:13px;font-weight:700}
+.clock{font-variant-numeric:tabular-nums;font-size:20px;font-weight:800;color:var(--navy)}
+.clock.warn{color:var(--terra)}
+.qtext{font-size:18px;font-weight:700;margin:0 0 6px}
+.budget{font-size:13px;font-weight:700;color:var(--terra);margin:0 0 14px}
+.opt{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 10px;background:#fff}
+.opt .lab{flex:1;font-size:15px}
+.opt .key{font-weight:800;color:var(--terra2);margin-right:2px}
+.step{width:38px;height:38px;border-radius:10px;border:1px solid var(--navy);background:#fff;color:var(--navy);font-size:22px;font-weight:800;cursor:pointer;line-height:1}
+.step:disabled{opacity:.3;cursor:default}
+.cnt{min-width:26px;text-align:center;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.remain{text-align:center;font-size:14px;font-weight:700;margin:4px 0 0}
+.big{text-align:center;padding:26px 8px}
+.big .ico{font-size:40px;margin:0 0 6px}
+.big h2{font-size:22px;margin:0 0 6px}
+.foot{text-align:center;margin-top:18px;font-size:12px;color:var(--navy);opacity:.6}
+@media (prefers-reduced-motion:reduce){*{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">BIO 004 &middot; Readiness check</p>
+  <h1>Live answer</h1>
+  <div id="app" class="card"><p class="muted">Loading…</p></div>
+  <p class="foot">Dr. Sharilyn Rennie &middot; Keep this open. Each question appears here when it goes live.</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="config.js"></script>
+<script src="questions.js"></script>
+<script>
+(function(){
+  var app=document.getElementById('app');
+  // ---- identity ----
+  function uid(){var k=localStorage.getItem('clk_id');if(!k){k='s'+Math.random().toString(36).slice(2,10);localStorage.setItem('clk_id',k);}return k;}
+  var ID=uid(), NAME=localStorage.getItem('clk_name')||'';
+  var BUDGET=window.POINT_BUDGET||4, S=window.SESSION;
+
+  // ---- firebase ----
+  var db=null, ok=true;
+  try{ firebase.initializeApp(window.FIREBASE_CONFIG); db=firebase.database(); }
+  catch(e){ ok=false; }
+  if(!ok || !window.FIREBASE_CONFIG || String(window.FIREBASE_CONFIG.databaseURL).indexOf('PASTE')===0){
+    app.innerHTML='<p class="muted">Not connected yet. Your instructor still needs to paste the Firebase settings into config.js.</p>'; return;
+  }
+  var R=function(p){return db.ref('sessions/'+S+'/'+p);};
+
+  function presence(){
+    var ref=R('roster/'+ID);
+    ref.set({name:NAME,ts:Date.now()});
+    ref.onDisconnect().remove();
+  }
+
+  // ---- name gate ----
+  function askName(){
+    app.innerHTML='<label for="nm">Your name</label>'+
+      '<input id="nm" type="text" autocomplete="name" placeholder="First and last" value="'+NAME.replace(/"/g,'&quot;')+'">'+
+      '<button class="btn" id="go">I\'m in</button>';
+    var i=document.getElementById('nm');i.focus();
+    document.getElementById('go').onclick=function(){
+      var v=i.value.trim(); if(!v){i.focus();return;}
+      NAME=v; localStorage.setItem('clk_name',v); presence(); listen();
+    };
+    i.addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('go').click();});
+  }
+
+  // ---- render states ----
+  var state={qi:null,startAt:0,dur:60,open:false}, alloc=[0,0,0,0], submittedKey=null, ticker=null;
+
+  function remaining(){return Math.max(0, Math.round((state.startAt+state.dur*1000-Date.now())/1000));}
+  function roundKey(){return state.qi+':'+state.startAt;}
+
+  function waiting(){
+    stopTick();
+    app.innerHTML='<div class="big"><div class="ico">⏳</div><h2>Waiting for the next question</h2><p class="muted">Hi '+esc(NAME)+'. Stay on this screen.</p></div>';
+  }
+  function timesUp(){
+    stopTick();
+    app.innerHTML='<div class="big"><div class="ico">🔒</div><h2>Time is up</h2><p class="muted">That one is closed. Wait for the next.</p></div>';
+  }
+  function recorded(){
+    stopTick();
+    var Q=window.QUESTIONS[state.qi];
+    var rows=Q.options.map(function(o,i){return '<div class="opt"><span class="key">'+'ABCD'[i]+'</span><span class="lab">'+esc(o)+'</span><span class="cnt">'+alloc[i]+'</span></div>';}).join('');
+    app.innerHTML='<div class="big"><div class="ico">✅</div><h2>Answer recorded</h2><p class="muted">You can change it until the timer ends.</p></div>'+rows+
+      '<button class="btn terra" id="edit">Change my answer</button>';
+    document.getElementById('edit').onclick=function(){ if(remaining()>0){ submittedKey=null; live(); } };
+  }
+  function live(){
+    var Q=window.QUESTIONS[state.qi];
+    var rows=Q.options.map(function(o,i){
+      return '<div class="opt"><span class="key">'+'ABCD'[i]+'</span><span class="lab">'+esc(o)+'</span>'+
+        '<button class="step" data-d="-1" data-i="'+i+'" aria-label="Remove a point from option '+'ABCD'[i]+'">−</button>'+
+        '<span class="cnt" id="c'+i+'">'+alloc[i]+'</span>'+
+        '<button class="step" data-d="1" data-i="'+i+'" aria-label="Add a point to option '+'ABCD'[i]+'">+</button></div>';
+    }).join('');
+    app.innerHTML='<div class="topbar"><span>Question '+(state.qi+1)+'</span><span class="clock" id="clk">'+fmt(remaining())+'</span></div>'+
+      '<p class="qtext">'+esc(Q.q)+'</p>'+
+      '<p class="budget">Spread '+BUDGET+' confidence points. All on one if you are sure, or split them.</p>'+
+      rows+
+      '<p class="remain" id="rem"></p>'+
+      '<button class="btn" id="sub">Submit</button>';
+    app.querySelectorAll('.step').forEach(function(b){
+      b.onclick=function(){
+        var i=+b.dataset.i, d=+b.dataset.d, sum=alloc.reduce(function(a,c){return a+c;},0);
+        if(d>0 && sum>=BUDGET) return;
+        if(d<0 && alloc[i]<=0) return;
+        alloc[i]+=d; document.getElementById('c'+i).textContent=alloc[i]; refresh();
+      };
+    });
+    document.getElementById('sub').onclick=submit;
+    refresh(); startTick();
+  }
+  function refresh(){
+    var sum=alloc.reduce(function(a,c){return a+c;},0), left=BUDGET-sum;
+    var rem=document.getElementById('rem'); if(rem) rem.textContent= left>0? (left+' point'+(left>1?'s':'')+' left') : 'All points placed';
+    var sub=document.getElementById('sub'); if(sub) sub.disabled = sum!==BUDGET;
+  }
+  function submit(){
+    var sum=alloc.reduce(function(a,c){return a+c;},0); if(sum!==BUDGET) return;
+    var top=topIndex(alloc);
+    R('responses/'+state.qi+'/'+ID).set({
+      name:NAME, alloc:alloc.slice(), top:top,
+      correct: top===window.QUESTIONS[state.qi].correct,
+      onCorrect: alloc[window.QUESTIONS[state.qi].correct],
+      ts:Date.now()
+    });
+    submittedKey=roundKey(); recorded();
+  }
+
+  // ---- timing ----
+  function startTick(){ stopTick(); ticker=setInterval(function(){
+      var r=remaining(), c=document.getElementById('clk');
+      if(c){c.textContent=fmt(r); c.classList.toggle('warn', r<=10);}
+      if(r<=0){ if(submittedKey===roundKey()) recorded(); else timesUp(); }
+    },300); }
+  function stopTick(){ if(ticker){clearInterval(ticker);ticker=null;} }
+
+  // ---- listen to the active question ----
+  function listen(){
+    R('active').on('value',function(snap){
+      var a=snap.val();
+      if(!a || !a.open){ state.open=false; waiting(); return; }
+      var fresh = (a.q!==state.qi)||(a.startAt!==state.startAt);
+      state.qi=a.q; state.startAt=a.startAt||0; state.dur=a.dur||60; state.open=true;
+      if(fresh){ alloc=[0,0,0,0]; submittedKey=(submittedKey===state.qi+':'+state.startAt)?submittedKey:null; }
+      if(remaining()<=0){ submittedKey===roundKey()?recorded():timesUp(); return; }
+      if(submittedKey===roundKey()) recorded(); else live();
+    });
+  }
+
+  // ---- helpers ----
+  function topIndex(a){var m=Math.max.apply(null,a);return a.indexOf(m);}
+  function fmt(s){var m=Math.floor(s/60),x=s%60;return m+':'+(x<10?'0':'')+x;}
+  function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  if(NAME){ presence(); listen(); } else { askName(); }
+})();
+</script>
+</body>
+</html>

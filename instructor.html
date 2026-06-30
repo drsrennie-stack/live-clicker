@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Dashboard &middot; BIO 004</title>
+<style>
+:root{--navy:#0B1530;--navy2:#142a36;--terra:#8B3A2E;--terra2:#A0522D;--gold:#B8924A;--off:#FAFAF9;--line:rgba(11,21,48,.14);--ok:#1E7A46}
+*{box-sizing:border-box}
+body{margin:0;background:var(--off);color:var(--navy);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45}
+.wrap{max-width:1100px;margin:0 auto;padding:16px max(16px,3vw) 48px}
+h1{font-size:24px;font-weight:800;margin:0 0 2px}
+.sub{font-size:13px;opacity:.7;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(11,21,48,.06)}
+.panel h2{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--terra);margin:0 0 12px}
+.qbtn{display:block;width:100%;text-align:left;font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
+.qbtn:hover{border-color:var(--navy)}
+.qbtn.active{border-color:var(--gold);background:#FBF6EA;font-weight:700}
+.qbtn .t{font-size:12px;color:var(--terra2);font-weight:700}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-weight:800;font-size:15px;border:0;border-radius:10px;background:var(--navy);color:#fff;padding:11px 16px;cursor:pointer}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+.btn.terra{background:var(--terra)}
+.clock{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums}
+.clock.warn{color:var(--terra)}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 14px}
+.stat .s{background:var(--off);border:1px solid var(--line);border-radius:10px;padding:8px 14px;min-width:108px}
+.stat .s b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--terra2);font-weight:800}
+.stat .s .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+.names{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0}
+.chip{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:#fff}
+.chip.work{border-color:var(--terra2);color:var(--terra)}
+.qprompt{font-size:16px;font-weight:700;margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--terra)}
+.pill{font-weight:800}
+.j-link{font-size:13px;word-break:break-all;background:var(--off);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0 0 10px}
+#qr{display:flex;justify-content:center}
+#qr img,#qr canvas{border-radius:8px}
+.warnbox{background:#FBEEE9;border:1px solid var(--terra2);border-radius:10px;padding:12px 14px;font-size:14px;color:var(--terra)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Live readiness dashboard</h1>
+  <p class="sub">BIO 004 &middot; room <strong id="room"></strong> &middot; <span id="conn">connecting…</span></p>
+  <div id="needcfg" class="warnbox" hidden>Not connected. Paste your Firebase settings into <strong>config.js</strong> first (see SETUP.md).</div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Join</h2>
+      <div class="j-link" id="jlink"></div>
+      <div id="qr"></div>
+
+      <h2 style="margin-top:18px">Questions</h2>
+      <div id="qlist"></div>
+      <div class="row" style="margin-top:6px">
+        <button class="btn" id="launch" disabled>Launch (60s)</button>
+        <button class="btn ghost" id="close" disabled>Close now</button>
+      </div>
+      <p class="sub" style="margin-top:10px">Launch clears that question's old answers and starts a fresh 60-second round.</p>
+      <button class="btn ghost" id="reset" style="margin-top:6px;border-color:var(--terra);color:var(--terra)">Reset whole session</button>
+    </div>
+
+    <div class="panel">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">Live</h2>
+        <span class="clock" id="clk">—</span>
+      </div>
+      <p class="qprompt" id="qprompt">Pick a question on the left, then Launch.</p>
+      <div class="stat">
+        <div class="s"><b>Present</b><span class="v" id="present">0</span></div>
+        <div class="s"><b>Answered</b><span class="v" id="answered">0</span></div>
+        <div class="s"><b>On correct</b><span class="v" id="pctok">—</span></div>
+        <div class="s"><b>Avg confidence</b><span class="v" id="avgconf">—</span></div>
+      </div>
+      <canvas id="bar" height="150"></canvas>
+      <h2 style="margin-top:16px">Still working</h2>
+      <div class="names" id="working"><span class="sub">nobody yet</span></div>
+
+      <div class="row" style="justify-content:space-between;margin-top:16px">
+        <h2 style="margin:0">Responses</h2>
+        <button class="btn ghost" id="csv">Export CSV</button>
+      </div>
+      <table id="tbl"><thead><tr><th>Name</th><th>Top pick</th><th>On correct</th><th>Spread</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="config.js"></script>
+<script src="questions.js"></script>
+<script>
+(function(){
+  var S=window.SESSION, BUDGET=window.POINT_BUDGET||4, Q=window.QUESTIONS;
+  document.getElementById('room').textContent=S;
+  // join link + QR
+  var stuURL=location.href.replace(/instructor\.html.*$/,'student.html');
+  document.getElementById('jlink').textContent=stuURL;
+  try{ new QRCode(document.getElementById('qr'),{text:stuURL,width:200,height:200,correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
+
+  var bad = !window.FIREBASE_CONFIG || String(window.FIREBASE_CONFIG.databaseURL).indexOf('PASTE')===0;
+  if(bad){ document.getElementById('needcfg').hidden=false; document.getElementById('conn').textContent='not configured'; return; }
+  var db; try{ firebase.initializeApp(window.FIREBASE_CONFIG); db=firebase.database(); }catch(e){ document.getElementById('needcfg').hidden=false; return; }
+  var R=function(p){return db.ref('sessions/'+S+'/'+p);};
+  db.ref('.info/connected').on('value',function(s){ document.getElementById('conn').textContent=s.val()?'connected':'offline'; });
+
+  // ---- state ----
+  var sel=0, active=null, roster={}, responses={}, respRef=null, chart=null, ticker=null;
+
+  // ---- question list ----
+  var ql=document.getElementById('qlist');
+  Q.forEach(function(q,i){
+    var b=document.createElement('button'); b.className='qbtn'+(i===0?' active':''); b.dataset.i=i;
+    b.innerHTML='<span class="t">Q'+(i+1)+' · '+esc(q.topic)+'</span><br>'+esc(q.q.slice(0,68))+(q.q.length>68?'…':'');
+    b.onclick=function(){ sel=i; paintList(); }; ql.appendChild(b);
+  });
+  function paintList(){ ql.querySelectorAll('.qbtn').forEach(function(b){ b.classList.toggle('active', +b.dataset.i===sel); }); }
+
+  document.getElementById('launch').onclick=function(){
+    R('responses/'+sel).remove();
+    R('active').set({q:sel,startAt:Date.now(),dur:60,open:true});
+  };
+  document.getElementById('close').onclick=function(){ R('active').update({open:false}); };
+  document.getElementById('reset').onclick=function(){
+    if(!confirm('Clear all answers and presence for this room?')) return;
+    R('active').remove(); R('responses').remove(); R('roster').remove();
+  };
+  document.getElementById('csv').onclick=exportCSV;
+
+  // enable controls once configured
+  document.getElementById('launch').disabled=false;
+  document.getElementById('close').disabled=false;
+
+  // ---- listeners ----
+  R('roster').on('value',function(s){ roster=s.val()||{}; render(); });
+  R('active').on('value',function(s){
+    active=s.val();
+    if(respRef){respRef.off();}
+    if(active && typeof active.q==='number'){
+      sel=active.q; paintList();
+      respRef=R('responses/'+active.q);
+      respRef.on('value',function(rs){ responses=rs.val()||{}; render(); });
+    } else { responses={}; }
+    render();
+  });
+
+  function remaining(){ if(!active||!active.open) return 0; return Math.max(0,Math.round((active.startAt+active.dur*1000-Date.now())/1000)); }
+  setInterval(function(){
+    var c=document.getElementById('clk');
+    if(active&&active.open){ var r=remaining(); c.textContent=fmt(r); c.classList.toggle('warn',r<=10); if(r<=0){c.textContent='closed';} }
+    else { c.textContent='—'; c.classList.remove('warn'); }
+  },300);
+
+  // ---- render ----
+  function render(){
+    var qi = active && typeof active.q==='number' ? active.q : sel;
+    var q=Q[qi];
+    document.getElementById('qprompt').textContent='Q'+(qi+1)+'. '+q.q;
+    var resp=Object.keys(responses).map(function(k){return responses[k];});
+    var present=Object.keys(roster).length;
+    document.getElementById('present').textContent=present;
+    document.getElementById('answered').textContent=resp.length;
+
+    // counts by top pick + confidence sums
+    var counts=[0,0,0,0], confSum=[0,0,0,0];
+    resp.forEach(function(r){ if(typeof r.top==='number') counts[r.top]++; (r.alloc||[]).forEach(function(v,i){confSum[i]+=v||0;}); });
+    var nCorrect=resp.filter(function(r){return r.top===q.correct;}).length;
+    var onCorr=resp.reduce(function(a,r){return a+(r.onCorrect||0);},0);
+    document.getElementById('pctok').textContent= resp.length? Math.round(100*nCorrect/resp.length)+'%' : '—';
+    document.getElementById('avgconf').textContent= resp.length? (onCorr/resp.length).toFixed(1)+'/'+BUDGET : '—';
+
+    drawChart(counts,q.correct);
+
+    // still working = present names without a response
+    var answeredNames={}; resp.forEach(function(r){answeredNames[(r.name||'').toLowerCase()]=1;});
+    var work=Object.keys(roster).map(function(k){return roster[k].name;}).filter(function(n){return !answeredNames[(n||'').toLowerCase()];});
+    var w=document.getElementById('working');
+    w.innerHTML = work.length? work.map(function(n){return '<span class="chip work">'+esc(n)+'</span>';}).join('') : '<span class="sub">everyone in is done</span>';
+
+    // table
+    var tb=document.querySelector('#tbl tbody');
+    resp.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+    tb.innerHTML=resp.map(function(r){
+      var pick = typeof r.top==='number' ? 'ABCD'[r.top] : '—';
+      var okc = r.top===q.correct;
+      var spread=(r.alloc||[]).map(function(v,i){return v?('ABCD'[i]+':'+v):null;}).filter(Boolean).join('  ');
+      return '<tr><td>'+esc(r.name||'')+'</td><td class="pill" style="color:'+(okc?'var(--ok)':'var(--terra)')+'">'+pick+'</td><td>'+(r.onCorrect||0)+'/'+BUDGET+'</td><td>'+esc(spread)+'</td></tr>';
+    }).join('');
+  }
+
+  function drawChart(counts,correct){
+    var ctx=document.getElementById('bar');
+    var colors=counts.map(function(_,i){return i===correct?'#B8924A':'#0B1530';});
+    if(!chart){
+      chart=new Chart(ctx,{type:'bar',data:{labels:['A','B','C','D'],datasets:[{data:counts,backgroundColor:colors,borderRadius:6}]},
+        options:{plugins:{legend:{display:false},tooltip:{enabled:true}},scales:{y:{beginAtZero:true,ticks:{precision:0}}},animation:false}});
+    } else { chart.data.datasets[0].data=counts; chart.data.datasets[0].backgroundColor=colors; chart.update(); }
+  }
+
+  function exportCSV(){
+    var qi = active && typeof active.q==='number' ? active.q : sel; var q=Q[qi];
+    var rows=[['name','top_pick','on_correct','A','B','C','D','correct','time']];
+    Object.keys(responses).forEach(function(k){var r=responses[k];var a=r.alloc||[0,0,0,0];
+      rows.push([r.name||'', typeof r.top==='number'?'ABCD'[r.top]:'', r.onCorrect||0, a[0]||0,a[1]||0,a[2]||0,a[3]||0, r.top===q.correct, new Date(r.ts||0).toLocaleString()]);});
+    var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+    var b=new Blob([csv],{type:'text/csv'}); var u=URL.createObjectURL(b); var a=document.createElement('a');
+    a.href=u; a.download='Q'+(qi+1)+'-responses.csv'; a.click(); URL.revokeObjectURL(u);
+  }
+
+  function fmt(s){var m=Math.floor(s/60),x=s%60;return m+':'+(x<10?'0':'')+x;}
+  function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+})();
+</script>
+</body>
+</html>
