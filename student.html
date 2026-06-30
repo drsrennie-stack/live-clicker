@@ -54,7 +54,7 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
   var app=document.getElementById('app');
   // ---- identity ----
   function uid(){var k=localStorage.getItem('clk_id');if(!k){k='s'+Math.random().toString(36).slice(2,10);localStorage.setItem('clk_id',k);}return k;}
-  var ID=uid(), NAME=localStorage.getItem('clk_name')||'';
+  var ID=uid(), CODE=localStorage.getItem('clk_code')||'';
   var BUDGET=window.POINT_BUDGET||4, S=window.SESSION;
 
   // ---- firebase ----
@@ -68,19 +68,20 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
 
   function presence(){
     var ref=R('roster/'+ID);
-    ref.set({name:NAME,ts:Date.now()});
+    ref.set({code:CODE,ts:Date.now()});
     ref.onDisconnect().remove();
   }
 
   // ---- name gate ----
-  function askName(){
-    app.innerHTML='<label for="nm">Your name</label>'+
-      '<input id="nm" type="text" autocomplete="name" placeholder="First and last" value="'+NAME.replace(/"/g,'&quot;')+'">'+
+  function askCode(){
+    app.innerHTML='<label for="nm">Your character name</label>'+
+      '<input id="nm" type="text" autocomplete="off" placeholder="e.g., Pikachu, Elsa, Kratos" value="'+CODE.replace(/"/g,'&quot;')+'">'+
+      '<p class="muted" style="margin:8px 0 0">Pick a Disney, cartoon, or game character, never your real name. Use the same one every class so your points add up.</p>'+
       '<button class="btn" id="go">I\'m in</button>';
     var i=document.getElementById('nm');i.focus();
     document.getElementById('go').onclick=function(){
       var v=i.value.trim(); if(!v){i.focus();return;}
-      NAME=v; localStorage.setItem('clk_name',v); presence(); listen();
+      CODE=v; localStorage.setItem('clk_code',v); presence(); listen();
     };
     i.addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('go').click();});
   }
@@ -93,7 +94,7 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
 
   function waiting(){
     stopTick();
-    app.innerHTML='<div class="big"><div class="ico">⏳</div><h2>Waiting for the next question</h2><p class="muted">Hi '+esc(NAME)+'. Stay on this screen.</p></div>';
+    app.innerHTML='<div class="big"><div class="ico">⏳</div><h2>Waiting for the next question</h2><p class="muted">You are in as '+esc(CODE)+'. Stay on this screen.</p></div>';
   }
   function timesUp(){
     stopTick();
@@ -141,7 +142,7 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
     var sum=alloc.reduce(function(a,c){return a+c;},0); if(sum!==BUDGET) return;
     var top=topIndex(alloc);
     R('responses/'+state.qi+'/'+ID).set({
-      name:NAME, alloc:alloc.slice(), top:top,
+      code:CODE, alloc:alloc.slice(), top:top,
       correct: top===window.QUESTIONS[state.qi].correct,
       onCorrect: alloc[window.QUESTIONS[state.qi].correct],
       ts:Date.now()
@@ -175,7 +176,7 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
   function fmt(s){var m=Math.floor(s/60),x=s%60;return m+':'+(x<10?'0':'')+x;}
   function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-  if(NAME){ presence(); listen(); } else { askName(); }
+  if(CODE){ presence(); listen(); } else { askCode(); }
 })();
 </script>
 </body>
