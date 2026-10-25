@@ -1,0 +1,36 @@
+GOOGLE SHEET + SCRIPT, one time, about 15 minutes
+
+PART 1  The sheet
+1. sheets.google.com > Blank. Name it "BIO 004 Clicker".
+2. Rename the first tab "roster". Row 1: Character | Student | Section. Fill it after the first class from the names you see.
+3. Add a tab "sessions". Leave it empty; the script writes its own header.
+4. Add a tab "totals". Row 1 headers, then in row 2 (copy down as far as you need):
+     A2  (character name, typed or =UNIQUE(sessions!C2:C))
+     B2  =IFERROR(VLOOKUP(A2, roster!A:B, 2, FALSE), "")                       student
+     C2  =SUMIFS(sessions!D:D, sessions!C:C, A2)                                concept points
+     D2  =SUMIFS(sessions!E:E, sessions!C:C, A2)                                concept max
+     E2  =IF(D2=0, "", C2/D2)                                                   concept percent (format as %)  -> brain dump
+     F2  =SUMIFS(sessions!G:G, sessions!C:C, A2)                                ID points
+     G2  =SUMIFS(sessions!H:H, sessions!C:C, A2)                                ID max
+     H2  =IF(G2=0, "", F2/G2)                                                   ID percent (format as %)       -> lab
+     I2  =COUNTIFS(sessions!C:C, A2)                                            days present                    -> roll
+   (sessions columns: A Date, B Room, C Character, D Concept pts, E Concept max, F Concept %, G ID pts, H ID max, I ID %, J Correct, K Detail)
+
+PART 2  The script (so the dashboard sends rows straight into "sessions")
+5. In the sheet: Extensions > Apps Script. Delete what is there, paste Code.gs, Save (name it "clicker").
+6. Deploy > New deployment > type: Web app. Description: clicker. Execute as: Me. Who has access: Anyone. Deploy.
+   Google will ask you to authorize; choose your account, Advanced > Go to clicker (unsafe) > Allow. That warning is normal
+   for your own script.
+7. Copy the Web app URL (ends in /exec).
+8. In the live-clicker repo, open config.js and add one line at the bottom:
+     window.SHEET_URL = "PASTE THE /exec URL HERE";
+   Push it.
+
+PART 3  Each class
+9. Open the dashboard with the room code, for example instructor.html?room=resp4, teach, launch from the deck.
+10. At the end press "Send to sheet" on the dashboard. One row per character name lands in "sessions" with today's date
+    and the room. Press it again later and it replaces that day's rows for that room, so nothing double counts.
+    "Export gradebook" still downloads the same thing as a CSV if you want a copy.
+
+If you change the deployment later (edit the script), use Deploy > Manage deployments > edit > New version, or the URL
+keeps serving the old code.

@@ -1,0 +1,71 @@
+{
+ "salt": "/Xp6SIz16jscSbbZWSzpqw==",
+ "iter": 600000,
+ "verifier": "3NSYwLe689V5sdMgK8N1A152Vw/XpHTS3b89GLOjk/ii//K8QCfUVgnt/9dn",
+ "files": [
+  {
+   "group": "Lecture slides",
+   "name": "BIO004-M4-Slides-Respiratory.html",
+   "desc": "Respiratory system deck, 30 slides",
+   "type": "text/html",
+   "enc": "BIO004-M4-Slides-Respiratory.html.enc",
+   "bytes": 5557626
+  },
+  {
+   "group": "Lecture slides",
+   "name": "BIO004-M4-Slides-LowerLimb.html",
+   "desc": "Lower limb deck, 16 slides, with bone maps and vessel and nerve maps",
+   "type": "text/html",
+   "enc": "BIO004-M4-Slides-LowerLimb.html.enc",
+   "bytes": 6289579
+  },
+  {
+   "group": "Lecture slides",
+   "name": "BIO004-M4-Slides-Lymphatic.html",
+   "desc": "Lymphatic system deck, 8 slides",
+   "type": "text/html",
+   "enc": "BIO004-M4-Slides-Lymphatic.html.enc",
+   "bytes": 2255809
+  },
+  {
+   "group": "Lecture sheet keys",
+   "name": "BIO004-M4-Respiratory-Lecture-Sheets-KEY.pdf",
+   "desc": "Respiratory, every line filled, 17 pages",
+   "type": "application/pdf",
+   "enc": "BIO004-M4-Respiratory-Lecture-Sheets-KEY.pdf.enc",
+   "bytes": 2595866
+  },
+  {
+   "group": "Lecture sheet keys",
+   "name": "BIO004-M4-Respiratory-Lecture-Sheets-KEY.html",
+   "desc": "Respiratory key on screen, click a box to zoom",
+   "type": "text/html",
+   "enc": "BIO004-M4-Respiratory-Lecture-Sheets-KEY.html.enc",
+   "bytes": 3066880
+  },
+  {
+   "group": "Lecture sheet keys",
+   "name": "BIO004-M4-LowerLimb-Lymphatic-Lecture-Sheets-KEY.pdf",
+   "desc": "Lower limb and lymphatic, every line filled, 16 pages",
+   "type": "application/pdf",
+   "enc": "BIO004-M4-LowerLimb-Lymphatic-Lecture-Sheets-KEY.pdf.enc",
+   "bytes": 7296525
+  },
+  {
+   "group": "Lecture sheet keys",
+   "name": "BIO004-M4-LowerLimb-Lymphatic-Lecture-Sheets-KEY.html",
+   "desc": "Lower limb and lymphatic key on screen",
+   "type": "text/html",
+   "enc": "BIO004-M4-LowerLimb-Lymphatic-Lecture-Sheets-KEY.html.enc",
+   "bytes": 7098051
+  },
+  {
+   "group": "TBL: Respiratory",
+   "name": "BIO004-M4-TBL-Respiratory-INSTRUCTOR-KEY.pdf",
+   "desc": "Run of show, iRAT and tRAT key with explanations, application key",
+   "type": "application/pdf",
+   "enc": "BIO004-M4-TBL-Respiratory-INSTRUCTOR-KEY.pdf.enc",
+   "bytes": 75534
+  }
+ ]
+}

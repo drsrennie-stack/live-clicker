@@ -86,7 +86,7 @@ th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--terr
         <h2 style="margin:0">Responses</h2>
         <div class="row" style="gap:8px">
           <button class="btn ghost" id="csv">This question</button>
-          <button class="btn" id="grade">Gradebook (all 5)</button>
+          <button class="btn" id="grade">Export gradebook</button><button type="button" id="sheet" class="btn">Send to sheet</button>
         </div>
       </div>
       <table id="tbl"><thead><tr><th>Code</th><th>Top pick</th><th>On correct</th><th>Spread</th></tr></thead><tbody></tbody></table>
@@ -139,6 +139,7 @@ th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--terr
   };
   document.getElementById('csv').onclick=exportCSV;
   document.getElementById('grade').onclick=exportGradebook;
+  document.getElementById('sheet').onclick=sendToSheet;
 
   // enable controls once configured
   document.getElementById('launch').disabled=false;
@@ -227,7 +228,7 @@ th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--terr
     var b=new Blob([csv],{type:'text/csv'}); var u=URL.createObjectURL(b); var a=document.createElement('a');
     a.href=u; a.download=name; a.click(); URL.revokeObjectURL(u);
   }
-  function exportGradebook(){
+  function buildGradebook(cb){
     /* One row per character name. Deck questions are split by kind: concept (brain dump points) and id (lab points). */
     db.ref('sessions/'+S+'/responses').once('value').then(function(snap){
       var data=snap.val()||{}, byCode={};
@@ -236,21 +237,37 @@ th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--terr
         var q=QOF(isNaN(id)?id:+id), kind=q.kind||'concept', rs=data[id]||{};
         Object.keys(rs).forEach(function(k){
           var r=rs[k]; var code=(r.code||'').trim(); if(!code) return;
-          var o=byCode[code]=byCode[code]||{pts:{},kinds:{}};
-          var onC=r.onCorrect||0; if(o.pts[id]===undefined || onC>o.pts[id]){ o.pts[id]=onC; } o.kinds[id]=kind;
+          var o=byCode[code]=byCode[code]||{pts:{}};
+          var onC=r.onCorrect||0; if(o.pts[id]===undefined || onC>o.pts[id]){ o.pts[id]=onC; }
         });
       });
-      var header=['code'].concat(ids.map(function(id){ var q=QOF(isNaN(id)?id:+id); return (q.kind==='id'?'ID ':'Q ')+(q.title||id); }))
-        .concat(['concept_pts','concept_max','concept_pct','id_pts','id_max','id_pct','num_correct']);
-      var rows=[header];
       var nConcept=ids.filter(function(id){return (QOF(isNaN(id)?id:+id).kind||'concept')!=='id';}).length, nId=ids.length-nConcept;
+      var out=[];
       Object.keys(byCode).sort().forEach(function(code){
-        var o=byCode[code]; var line=[code]; var cp=0, ip=0, nc=0;
-        ids.forEach(function(id){ var v=o.pts[id]===undefined?0:o.pts[id]; line.push(v); if(v===BUDGET) nc++; if((QOF(isNaN(id)?id:+id).kind||'concept')==='id') ip+=v; else cp+=v; });
-        rows.push(line.concat([cp, nConcept*BUDGET, nConcept?Math.round(100*cp/(nConcept*BUDGET)):0, ip, nId*BUDGET, nId?Math.round(100*ip/(nId*BUDGET)):0, nc]));
+        var o=byCode[code]; var cp=0, ip=0, nc=0, detail=[];
+        ids.forEach(function(id){ var q=QOF(isNaN(id)?id:+id); var v=o.pts[id]===undefined?0:o.pts[id]; if(v===BUDGET) nc++; if((q.kind||'concept')==='id') ip+=v; else cp+=v; detail.push((q.kind==='id'?'ID ':'Q ')+(q.title||id)+'='+v); });
+        out.push({code:code, concept_pts:cp, concept_max:nConcept*BUDGET, concept_pct:nConcept?Math.round(100*cp/(nConcept*BUDGET)):0, id_pts:ip, id_max:nId*BUDGET, id_pct:nId?Math.round(100*ip/(nId*BUDGET)):0, num_correct:nc, detail:detail.join('; ')});
       });
-      if(rows.length===1){ alert('No responses recorded yet.'); return; }
+      cb(out, ids);
+    });
+  }
+  function exportGradebook(){
+    buildGradebook(function(out, ids){
+      if(!out.length){ alert('No responses recorded yet.'); return; }
+      var header=['code','concept_pts','concept_max','concept_pct','id_pts','id_max','id_pct','num_correct','detail'];
+      var rows=[header].concat(out.map(function(r){ return header.map(function(h){ return r[h]; }); }));
       downloadCSV(rows,'gradebook-'+S+'.csv');
+    });
+  }
+  function sendToSheet(){
+    if(!window.SHEET_URL){ alert('No sheet connected yet. Add window.SHEET_URL to config.js (see GOOGLE-SHEET-SETUP.txt).'); return; }
+    buildGradebook(function(out){
+      if(!out.length){ alert('No responses recorded yet.'); return; }
+      var d=new Date(), p=function(n){return (n<10?'0':'')+n;}; var date=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+      var b=document.getElementById('sheet'); b.disabled=true; b.textContent='Sending…';
+      fetch(window.SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({date:date,room:S,rows:out})})
+        .then(function(){ b.textContent='Sent '+out.length+' rows'; setTimeout(function(){b.disabled=false;b.textContent='Send to sheet';},2500); })
+        .catch(function(){ b.disabled=false; b.textContent='Send to sheet'; alert('Could not reach the sheet. Check the internet connection and the SHEET_URL.'); });
     });
   }
   function fmt(s){var m=Math.floor(s/60),x=s%60;return m+':'+(x<10?'0':'')+x;}
