@@ -25,3 +25,13 @@ window.POINT_BUDGET = 4;                       // confidence points per question
 
 /* Google Sheet: the Apps Script web app the dashboard posts to with "Send to sheet". */
 window.SHEET_URL = "https://script.google.com/macros/s/AKfycbyedRRM9unCmwv1fNHInzyXVGtDwCBAgmunQxEaCVgKLho_2sp068PWHHGhS34LNv_y/exec";
+
+/* Rooms shown as buttons at the top of the dashboard. Each lecture deck has three class sets: A, B and C
+   (pick the set on the deck's title bar). Set A uses the plain room, B adds "b", C adds "c",
+   so each class answers its own questions and the gradebook stays separate. */
+window.ROOMS = {
+  "Respiratory": ["resp4", "resp4b", "resp4c"],
+  "Lower limb":  ["limb4", "limb4b", "limb4c"],
+  "Lymphatic":   ["lymph4", "lymph4b", "lymph4c"],
+  "Cardiac":     [window.SESSION]
+};
