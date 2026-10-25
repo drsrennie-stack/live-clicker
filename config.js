@@ -22,3 +22,4 @@ window.FIREBASE_CONFIG = {
 
 window.SESSION      = "cardiac-conduction";   // shared room code
 window.POINT_BUDGET = 4;                       // confidence points per question
+window.SHEET_URL = "https://script.google.com/macros/s/AKfycbyedRRM9unCmwv1fNHInzyXVGtDwCBAgmunQxEaCVgKLho_2sp068PWHHGhS34LNv_y/exec";
