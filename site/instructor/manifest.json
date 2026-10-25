@@ -1,7 +1,7 @@
 {
- "salt": "/Xp6SIz16jscSbbZWSzpqw==",
+ "salt": "dubt+0RZqCyfSMmZAi08rQ==",
  "iter": 600000,
- "verifier": "3NSYwLe689V5sdMgK8N1A152Vw/XpHTS3b89GLOjk/ii//K8QCfUVgnt/9dn",
+ "verifier": "HIAeJv52YJP7Lj+kdEMR70fMu97TX2ElqWkkaCej+lLsCv5UrooCvJlCuuZT",
  "files": [
   {
    "group": "Lecture slides",
@@ -9,7 +9,7 @@
    "desc": "Respiratory system deck, 30 slides",
    "type": "text/html",
    "enc": "BIO004-M4-Slides-Respiratory.html.enc",
-   "bytes": 5557626
+   "bytes": 5558010
   },
   {
    "group": "Lecture slides",
@@ -17,7 +17,7 @@
    "desc": "Lower limb deck, 16 slides, with bone maps and vessel and nerve maps",
    "type": "text/html",
    "enc": "BIO004-M4-Slides-LowerLimb.html.enc",
-   "bytes": 6289579
+   "bytes": 6289969
   },
   {
    "group": "Lecture slides",
@@ -25,7 +25,7 @@
    "desc": "Lymphatic system deck, 8 slides",
    "type": "text/html",
    "enc": "BIO004-M4-Slides-Lymphatic.html.enc",
-   "bytes": 2255809
+   "bytes": 2256193
   },
   {
    "group": "Lecture sheet keys",

@@ -2,98 +2,87 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Live Dashboard &middot; BIO 004</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Live clicker dashboard · BIO 004</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=DM+Sans:wght@700&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#0B1530;--navy2:#142a36;--terra:#8B3A2E;--terra2:#A0522D;--gold:#B8924A;--off:#FAFAF9;--line:rgba(11,21,48,.14);--ok:#1E7A46}
-*{box-sizing:border-box}
-body{margin:0;background:var(--off);color:var(--navy);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45}
-.wrap{max-width:1100px;margin:0 auto;padding:16px max(16px,3vw) 48px}
-h1{font-size:24px;font-weight:800;margin:0 0 2px}
-.sub{font-size:13px;opacity:.7;margin:0 0 16px}
-.grid{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
-@media(max-width:820px){.grid{grid-template-columns:1fr}}
-.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(11,21,48,.06)}
-.panel h2{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--terra);margin:0 0 12px}
-.qbtn{display:block;width:100%;text-align:left;font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;margin:0 0 8px;cursor:pointer}
-.qbtn:hover{border-color:var(--navy)}
-.qbtn.active{border-color:var(--gold);background:#FBF6EA;font-weight:700}
-.qbtn .t{font-size:12px;color:var(--terra2);font-weight:700}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.btn{font:inherit;font-weight:800;font-size:15px;border:0;border-radius:10px;background:var(--navy);color:#fff;padding:11px 16px;cursor:pointer}
-.btn:disabled{opacity:.4;cursor:default}
-.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--navy)}
-.btn.terra{background:var(--terra)}
-.clock{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums}
-.clock.warn{color:var(--terra)}
-.stat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 14px}
-.stat .s{background:var(--off);border:1px solid var(--line);border-radius:10px;padding:8px 14px;min-width:108px}
-.stat .s b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--terra2);font-weight:800}
-.stat .s .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
-.names{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0}
-.chip{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:#fff}
-.chip.work{border-color:var(--terra2);color:var(--terra)}
-.qprompt{font-size:16px;font-weight:700;margin:0 0 10px}
-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
-th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
-th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--terra)}
-.pill{font-weight:800}
-.j-link{font-size:13px;word-break:break-all;background:var(--off);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0 0 10px}
-#qr{display:flex;justify-content:center}
-#qr img,#qr canvas{border-radius:8px}
+:root{--navy:#060B1A;--rust:#7A2E24;--terra:#7A2E24;--terra2:#A0452F;--gold:#B8924A;--gold-light:#E3C27D;--off:#FAFAF9;--line:#E3E4E8;--ok:#1F6B3A}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:"Plus Jakarta Sans",system-ui,sans-serif;background:var(--off);color:var(--navy);font-size:15px;line-height:1.45}
+:focus-visible{outline:3px solid var(--rust);outline-offset:3px;border-radius:4px}
+header.band{background:var(--navy);color:#fff;padding:28px max(16px,3vw) 22px}
+.eyebrow{font-family:"DM Sans",system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-light);margin:0 0 6px}
+h1{font-size:clamp(24px,3.4vw,36px);font-weight:800;margin:0;line-height:1.1}h1 span{color:var(--gold-light)}
+.sub{font-size:13px;color:#454B5C;margin:0}
+header .sub{color:#C8D2DA;margin-top:6px}header .sub strong{color:#fff}
+.wrap{max-width:1180px;margin:0 auto;padding:18px max(16px,3vw) 50px;display:grid;gap:12px}
 .warnbox{background:#FBEEE9;border:1px solid var(--terra2);border-radius:10px;padding:12px 14px;font-size:14px;color:var(--terra)}
+.row{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,13fr);border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.06);background:#F7F6F3}
+.q{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 16px;align-items:start;align-content:start;padding:20px 22px}
+.row.t1 .q{background:linear-gradient(135deg,#E1E5ED,#F3F4F7)}.row.t2 .q{background:linear-gradient(135deg,#F3E8D2,#FBF6EC)}.row.t3 .q{background:linear-gradient(135deg,#EFDCD6,#F9F1EE)}
+.n{font-size:clamp(56px,7vw,84px);font-weight:800;line-height:.85;letter-spacing:-.05em;color:var(--rust);grid-row:1/3}
+.want{margin:0;font-size:16px;font-weight:600;color:#2A3949}
+.q h2{margin:0;font-size:clamp(19px,2.2vw,24px);font-weight:800;line-height:1.1;color:var(--navy)}
+.q h2 .big{display:block;font-size:clamp(26px,3vw,32px);text-transform:uppercase;color:var(--rust);letter-spacing:.01em}
+.q .d{grid-column:1/-1;margin:8px 0 0;font-size:13.5px;color:#2A3949;max-width:46ch}
+.q .wide{grid-column:1/-1}
+.body{padding:16px 18px;display:grid;gap:10px;align-content:start}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--navy);background:var(--navy);color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer}
+.btn:hover{background:#16213d}.btn.ghost{background:#fff;color:var(--navy)}.btn.ghost:hover{background:#EAEEF4}.btn[disabled]{opacity:.45;cursor:default}
+.btn.danger{background:#fff;border-color:var(--terra);color:var(--terra)}
+.j-link{font-size:13px;word-break:break-all;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+#qr{display:flex;justify-content:center;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}
+#qr img,#qr canvas{border-radius:6px}
+.code{font-size:clamp(28px,3vw,40px);font-weight:800;letter-spacing:.06em;color:var(--navy);text-align:center;line-height:1}
+.codelab{font-family:"DM Sans",system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--rust);text-align:center}
+#qlist{display:grid;gap:8px}
+.qbtn{display:block;width:100%;text-align:left;font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;cursor:pointer;color:var(--navy)}
+.qbtn:hover{border-color:var(--navy)}.qbtn.active{border-color:var(--gold);background:#FBF6EA;font-weight:700}
+.qbtn .t{font-size:12px;color:var(--terra2);font-weight:700}
+.clock{font-size:40px;font-weight:800;color:var(--navy);line-height:1;font-variant-numeric:tabular-nums}.clock.warn{color:var(--terra)}
+.qprompt{font-size:17px;font-weight:700;margin:0}
+.stat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.s{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.s b{display:block;font-family:"DM Sans",system-ui,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--rust)}
+.s .v{font-size:26px;font-weight:800}
+.names{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:#fff}.chip.work{border-color:var(--terra2);color:var(--terra)}
+h3.lab{font-family:"DM Sans",system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--rust);margin:4px 0 0}
+table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}th{font-family:"DM Sans",system-ui,sans-serif;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--rust)}
+.pill{font-weight:800}
+@media (max-width:860px){.row{grid-template-columns:1fr}.stat{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
+<header class="band"><p class="eyebrow">BIO 004 Human Anatomy · Dr. Rennie</p><h1>Live <span>clicker</span></h1><p class="sub">Room <strong id="room"></strong> &middot; <span id="conn">connecting…</span></p></header>
 <div class="wrap">
-  <h1>Live readiness dashboard</h1>
-  <p class="sub">BIO 004 &middot; room <strong id="room"></strong> &middot; <span id="conn">connecting…</span></p>
   <div id="needcfg" class="warnbox" hidden>Not connected. Paste your Firebase settings into <strong>config.js</strong> first (see SETUP.md).</div>
 
-  <div class="grid">
-    <div class="panel">
-      <h2>Join</h2>
-      <div class="j-link" id="jlink"></div>
-      <div id="qr"></div>
+  <section class="row t1"><div class="q"><span class="n" aria-hidden="true">01</span><div><p class="want">Students</p><h2><span class="big">Join</span>Scan, or type the room code</h2></div>
+    <div class="d wide" style="display:grid;gap:10px;margin-top:14px"><div class="codelab">Room code</div><div class="code" id="roomcode"></div><div id="qr"></div><div class="j-link" id="jlink"></div></div></div>
+    <div class="body"><div class="card"><h3 class="lab">Questions in this room</h3><p class="sub" style="margin:4px 0 10px">Questions you launch from a lecture deck appear here as they run. The list below is the stored set for this room; pick one and Launch to run it from the dashboard instead.</p><div id="qlist"></div>
+      <div class="btns" style="margin-top:10px"><button class="btn" id="launch" disabled>Launch (60 s)</button><button class="btn ghost" id="close" disabled>Close now</button><button class="btn danger" id="reset">Reset whole session</button></div></div></div>
+  </section>
 
-      <h2 style="margin-top:18px">Questions</h2>
-      <div id="qlist"></div>
-      <div class="row" style="margin-top:6px">
-        <button class="btn" id="launch" disabled>Launch (60s)</button>
-        <button class="btn ghost" id="close" disabled>Close now</button>
-      </div>
-      <p class="sub" style="margin-top:10px">Launch clears that question's old answers and starts a fresh 60-second round.</p>
-      <button class="btn ghost" id="reset" style="margin-top:6px;border-color:var(--terra);color:var(--terra)">Reset whole session</button>
+  <section class="row t2"><div class="q"><span class="n" aria-hidden="true">02</span><div><p class="want">Right now</p><h2><span class="big">Live</span>Who is in, who answered</h2></div>
+    <div class="d wide" style="margin-top:14px"><div class="clock" id="clk">—</div><p class="qprompt" id="qprompt" style="margin-top:10px">Pick a question, then Launch.</p></div></div>
+    <div class="body">
+      <div class="stat"><div class="s"><b>Present</b><span class="v" id="present">0</span></div><div class="s"><b>Answered</b><span class="v" id="answered">0</span></div><div class="s"><b>On correct</b><span class="v" id="pctok">—</span></div><div class="s"><b>Avg confidence</b><span class="v" id="avgconf">—</span></div></div>
+      <div class="card"><canvas id="bar" height="150"></canvas></div>
+      <h3 class="lab">Still working</h3><div class="names" id="working"><span class="sub">nobody yet</span></div>
     </div>
+  </section>
 
-    <div class="panel">
-      <div class="row" style="justify-content:space-between">
-        <h2 style="margin:0">Live</h2>
-        <span class="clock" id="clk">—</span>
-      </div>
-      <p class="qprompt" id="qprompt">Pick a question on the left, then Launch.</p>
-      <div class="stat">
-        <div class="s"><b>Present</b><span class="v" id="present">0</span></div>
-        <div class="s"><b>Answered</b><span class="v" id="answered">0</span></div>
-        <div class="s"><b>On correct</b><span class="v" id="pctok">—</span></div>
-        <div class="s"><b>Avg confidence</b><span class="v" id="avgconf">—</span></div>
-      </div>
-      <canvas id="bar" height="150"></canvas>
-      <h2 style="margin-top:16px">Still working</h2>
-      <div class="names" id="working"><span class="sub">nobody yet</span></div>
-
-      <div class="row" style="justify-content:space-between;margin-top:16px">
-        <h2 style="margin:0">Responses</h2>
-        <div class="row" style="gap:8px">
-          <button class="btn ghost" id="csv">This question</button>
-          <button class="btn" id="grade">Export gradebook</button><button type="button" id="sheet" class="btn">Send to sheet</button>
-        </div>
-      </div>
-      <table id="tbl"><thead><tr><th>Code</th><th>Top pick</th><th>On correct</th><th>Spread</th></tr></thead><tbody></tbody></table>
-    </div>
-  </div>
+  <section class="row t3"><div class="q"><span class="n" aria-hidden="true">03</span><div><p class="want">After class</p><h2><span class="big">Scores</span>Send them to the sheet</h2></div>
+    <p class="d">Send to sheet writes one row per character name into your Google Sheet, concept points and ID points in their own columns, with today's date and the room. Export gradebook downloads the same thing as a CSV.</p>
+    <div class="btns wide" style="margin-top:12px"><button class="btn" id="sheet" type="button">Send to sheet</button><button class="btn ghost" id="grade">Export gradebook</button><button class="btn ghost" id="csv">This question (CSV)</button></div></div>
+    <div class="body"><table id="tbl"><thead><tr><th>Code</th><th>Top pick</th><th>On correct</th><th>Spread</th></tr></thead><tbody></tbody></table></div>
+  </section>
 </div>
-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -104,7 +93,7 @@ th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--terr
 (function(){
   var S=(location.search.match(/[?&]room=([A-Za-z0-9_-]+)/)||[])[1]||window.SESSION, BUDGET=window.POINT_BUDGET||4, Q=window.QUESTIONS.slice();
   var DBQ={};  // questions a lecture deck pushed into this room
-  document.getElementById('room').textContent=S;
+  document.getElementById('room').textContent=S; document.getElementById('roomcode').textContent=S.toUpperCase();
   // join link + QR
   var stuURL=location.href.replace(/instructor\.html.*$/,'student.html')+'?room='+encodeURIComponent(S);
   document.getElementById('jlink').textContent=stuURL;
@@ -119,18 +108,28 @@ th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--terr
   // ---- state ----
   var sel=0, active=null, roster={}, responses={}, respRef=null, chart=null, ticker=null;
 
-  // ---- question list ----
+  // ---- question list: the deck's questions for this room (from the database) plus, in the original cardiac room, the stored five ----
   var ql=document.getElementById('qlist');
-  Q.forEach(function(q,i){
-    var b=document.createElement('button'); b.className='qbtn'+(i===0?' active':''); b.dataset.i=i;
-    b.innerHTML='<span class="t">Q'+(i+1)+' · '+esc(q.topic)+'</span><br>'+esc(q.q.slice(0,68))+(q.q.length>68?'…':'');
-    b.onclick=function(){ sel=i; paintList(); }; ql.appendChild(b);
-  });
-  function paintList(){ ql.querySelectorAll('.qbtn').forEach(function(b){ b.classList.toggle('active', +b.dataset.i===sel); }); }
+  function buildList(){
+    ql.innerHTML='';
+    var items=[];
+    if(S===window.SESSION) Q.forEach(function(q,i){ items.push({id:i, label:'Q'+(i+1)+' · '+q.topic, text:q.q}); });
+    Object.keys(DBQ).map(function(k){ return {id:k, q:DBQ[k]}; }).sort(function(a,b){ return (a.q.order||0)-(b.q.order||0); })
+      .forEach(function(x){ items.push({id:x.id, label:(x.q.kind==='id'?'ID · ':'Clicker · ')+(x.q.title||x.id)+' · '+(x.q.dur||60)+' s', text:x.q.q}); });
+    if(!items.length){ ql.innerHTML='<p class="sub">No questions yet. Open a lecture deck in this room and its questions appear here.</p>'; return; }
+    items.forEach(function(it){
+      var b=document.createElement('button'); b.className='qbtn'+(String(it.id)===String(sel)?' active':''); b.dataset.i=it.id;
+      b.innerHTML='<span class="t">'+esc(it.label)+'</span><br>'+esc(it.text.slice(0,80))+(it.text.length>80?'…':'');
+      b.onclick=function(){ sel=isNaN(it.id)?it.id:+it.id; paintList(); }; ql.appendChild(b);
+    });
+  }
+  function paintList(){ ql.querySelectorAll('.qbtn').forEach(function(b){ b.classList.toggle('active', String(b.dataset.i)===String(sel)); }); }
+  buildList();
 
   document.getElementById('launch').onclick=function(){
+    var dur = (typeof sel==='number') ? 60 : ((DBQ[sel]&&DBQ[sel].dur)||60);
     R('responses/'+sel).remove();
-    R('active').set({q:sel,startAt:Date.now(),dur:60,open:true});
+    R('active').set({q:sel,startAt:Date.now(),dur:dur,open:true});
   };
   document.getElementById('close').onclick=function(){ R('active').update({open:false}); };
   document.getElementById('reset').onclick=function(){
@@ -147,13 +146,13 @@ th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--terr
 
   // ---- listeners ----
   function QOF(qi){ return (typeof qi==='number') ? Q[qi] : (DBQ[qi]||{q:'(question from the deck)',options:['A','B','C','D'],correct:0}); }
-  R('questions').on('value',function(s){ DBQ=s.val()||{}; render(); });
+  R('questions').on('value',function(s){ DBQ=s.val()||{}; buildList(); render(); });
   R('roster').on('value',function(s){ roster=s.val()||{}; render(); });
   R('active').on('value',function(s){
     active=s.val();
     if(respRef){respRef.off();}
     if(active && active.q!==undefined && active.q!==null){
-      if(typeof active.q==='number'){ sel=active.q; paintList(); }
+      sel=active.q; paintList();
       respRef=R('responses/'+active.q);
       respRef.on('value',function(rs){ responses=rs.val()||{}; render(); });
     } else { responses={}; }
