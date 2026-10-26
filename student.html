@@ -35,6 +35,7 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
 .big h2{font-size:22px;margin:0 0 6px}
 .foot{text-align:center;margin-top:18px;font-size:12px;color:var(--navy);opacity:.6}
 @media (prefers-reduced-motion:reduce){*{transition:none}}
+.opt.one{width:100%;text-align:left;font:inherit;cursor:pointer;border:2px solid #0B1530;background:#fff;padding:14px 12px;border-radius:10px;margin:0 0 8px;font-size:17px;display:flex;gap:10px;align-items:center}.opt.one:active{background:#EAEEF4}
 </style>
 </head>
 <body>
@@ -55,7 +56,9 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
   // ---- identity ----
   function uid(){var k=localStorage.getItem('clk_id');if(!k){k='s'+Math.random().toString(36).slice(2,10);localStorage.setItem('clk_id',k);}return k;}
   var ID=uid(), CODE=localStorage.getItem('clk_code')||'';
-  var BUDGET=window.POINT_BUDGET||4, S=window.SESSION;
+  var BUDGET=window.POINT_BUDGET||4;
+  var S=((location.search.match(/[?&]room=([A-Za-z0-9_-]+)/)||[])[1]||localStorage.getItem('clk_room')||'').toLowerCase();
+  var DBQ={};   // questions pushed by a lecture deck live here, keyed by id
 
   // ---- firebase ----
   var db=null, ok=true;
@@ -65,6 +68,17 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
     app.innerHTML='<p class="muted">Not connected yet. Your instructor still needs to paste the Firebase settings into config.js.</p>'; return;
   }
   var R=function(p){return db.ref('sessions/'+S+'/'+p);};
+  function askRoom(){
+    app.innerHTML='<label for="rm">Room code</label><input id="rm" type="text" autocomplete="off" autocapitalize="characters" placeholder="the code on the screen">'+
+      '<p class="muted" style="margin:8px 0 0">It is on the slide next to the QR code. Then you will pick your character name.</p><button class="btn" id="rgo">Next</button>';
+    var i=document.getElementById('rm'); i.focus();
+    document.getElementById('rgo').onclick=function(){ var v=i.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g,''); if(!v){i.focus();return;} localStorage.setItem('clk_room',v); location.search='?room='+encodeURIComponent(v); };
+    i.addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('rgo').click();});
+  }
+  if(!S){ askRoom(); return; }
+  localStorage.setItem('clk_room',S);
+  R('questions').on('value',function(snap){ DBQ=snap.val()||{}; });
+  function QOF(qi){ return (typeof qi==='number') ? window.QUESTIONS[qi] : DBQ[qi]; }
 
   function presence(){
     var ref=R('roster/'+ID);
@@ -94,7 +108,8 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
 
   function waiting(){
     stopTick();
-    app.innerHTML='<div class="big"><div class="ico">⏳</div><h2>Waiting for the next question</h2><p class="muted">You are in as '+esc(CODE)+'. Stay on this screen.</p></div>';
+    app.innerHTML='<div class="big"><div class="ico">⏳</div><h2>Waiting for the next question</h2><p class="muted">You are in as '+esc(CODE)+' in room '+esc(S.toUpperCase())+'. Stay on this screen.</p><p class="muted"><a href="student.html?room=" id="chg">Different room?</a></p></div>';
+    var c=document.getElementById('chg'); if(c) c.onclick=function(ev){ ev.preventDefault(); localStorage.removeItem('clk_room'); location.search=''; };
   }
   function timesUp(){
     stopTick();
@@ -102,14 +117,15 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
   }
   function recorded(){
     stopTick();
-    var Q=window.QUESTIONS[state.qi];
+    var Q=QOF(state.qi); if(!Q){waiting();return;}
     var rows=Q.options.map(function(o,i){return '<div class="opt"><span class="key">'+'ABCD'[i]+'</span><span class="lab">'+esc(o)+'</span><span class="cnt">'+alloc[i]+'</span></div>';}).join('');
     app.innerHTML='<div class="big"><div class="ico">✅</div><h2>Answer recorded</h2><p class="muted">You can change it until the timer ends.</p></div>'+rows+
       '<button class="btn terra" id="edit">Change my answer</button>';
     document.getElementById('edit').onclick=function(){ if(remaining()>0){ submittedKey=null; live(); } };
   }
   function live(){
-    var Q=window.QUESTIONS[state.qi];
+    var Q=QOF(state.qi); if(!Q){ app.innerHTML='<div class="big"><div class="ico">⏳</div><h2>Loading the question</h2></div>'; setTimeout(function(){ if(QOF(state.qi)) live(); },600); return; }
+    if(Q.mode==='single'){ liveSingle(Q); return; }
     var rows=Q.options.map(function(o,i){
       return '<div class="opt"><span class="key">'+'ABCD'[i]+'</span><span class="lab">'+esc(o)+'</span>'+
         '<button class="step" data-d="-1" data-i="'+i+'" aria-label="Remove a point from option '+'ABCD'[i]+'">−</button>'+
@@ -133,6 +149,17 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
     document.getElementById('sub').onclick=submit;
     refresh(); startTick();
   }
+  function liveSingle(Q){
+    var rows=Q.options.map(function(o,i){ return '<button class="opt one" data-i="'+i+'"><span class="key">'+'ABCD'[i]+'</span><span class="lab">'+esc(o)+'</span></button>'; }).join('');
+    app.innerHTML='<div class="topbar"><span>'+esc(Q.title||'Question')+'</span><span class="clock" id="clk">'+fmt(remaining())+'</span></div>'+
+      '<p class="qtext">'+esc(Q.q)+'</p><p class="budget">Tap one answer. One tap sends it.</p>'+rows;
+    app.querySelectorAll('.opt.one').forEach(function(b){ b.onclick=function(){
+      var i=+b.dataset.i; alloc=[0,0,0,0]; alloc[i]=BUDGET;
+      R('responses/'+state.qi+'/'+ID).set({ code:CODE, alloc:alloc.slice(), top:i, correct:i===Q.correct, onCorrect:(i===Q.correct?BUDGET:0), ts:Date.now() });
+      submittedKey=roundKey(); recorded();
+    }; });
+    startTick();
+  }
   function refresh(){
     var sum=alloc.reduce(function(a,c){return a+c;},0), left=BUDGET-sum;
     var rem=document.getElementById('rem'); if(rem) rem.textContent= left>0? (left+' point'+(left>1?'s':'')+' left') : 'All points placed';
@@ -140,11 +167,11 @@ input[type=text]{width:100%;font:inherit;font-size:17px;padding:12px 14px;border
   }
   function submit(){
     var sum=alloc.reduce(function(a,c){return a+c;},0); if(sum!==BUDGET) return;
-    var top=topIndex(alloc);
+    var top=topIndex(alloc), Q=QOF(state.qi);
     R('responses/'+state.qi+'/'+ID).set({
       code:CODE, alloc:alloc.slice(), top:top,
-      correct: top===window.QUESTIONS[state.qi].correct,
-      onCorrect: alloc[window.QUESTIONS[state.qi].correct],
+      correct: top===Q.correct,
+      onCorrect: alloc[Q.correct],
       ts:Date.now()
     });
     submittedKey=roundKey(); recorded();
